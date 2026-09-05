@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>认字小达人 · 儿童认字检查</title>
+<style>
+  :root{
+    --pink:#ff8fbf;
+    --pink-light:#ffe3f0;
+    --mint:#6fd6a4;
+    --mint-light:#e0f7ec;
+    --orange:#ffb26b;
+    --orange-light:#fff1e0;
+    --purple:#a78bfa;
+    --purple-light:#efe9ff;
+    --blue:#6bb6ff;
+    --blue-light:#e6f2ff;
+    --yellow:#ffd76b;
+    --text:#5b4a63;
+    --card-shadow:0 12px 32px rgba(190,150,200,.35);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family:"YouYuan","幼圆","Yuanti SC","Comic Sans MS","PingFang SC","Microsoft YaHei",sans-serif;
+    background:linear-gradient(160deg,#ffe9f4 0%,#fdf0ff 25%,#e8f6ff 60%,#eafcf2 100%);
+    color:var(--text);
+    overflow:hidden;
+    position:relative;
+    user-select:none;
+  }
+  /* ---- 漂浮装饰 ---- */
+  .deco{position:absolute;pointer-events:none;z-index:0;opacity:.75;font-size:34px;animation:float 6s ease-in-out infinite;}
+  .d1{top:6%;left:6%;animation-delay:0s;}
+  .d2{top:10%;right:9%;animation-delay:1.2s;}
+  .d3{bottom:22%;left:4%;animation-delay:.6s;font-size:26px;}
+  .d4{bottom:12%;right:5%;animation-delay:1.8s;font-size:28px;}
+  .d5{top:30%;left:2%;animation-delay:2.2s;font-size:22px;}
+  .d6{top:34%;right:3%;animation-delay:.9s;font-size:22px;}
+  @keyframes float{0%,100%{transform:translateY(0) rotate(-6deg);}50%{transform:translateY(-16px) rotate(6deg);}}
+
+  /* ---- 顶部标题 ---- */
+  header{
+    position:relative;z-index:5;text-align:center;padding:18px 16px 6px;
+  }
+  header h1{
+    font-size:44px;font-weight:800;letter-spacing:4px;
+    background:linear-gradient(90deg,var(--pink),var(--purple),var(--blue));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:none;
+  }
+  header .sub{font-size:15px;color:#b792c9;margin-top:2px;letter-spacing:2px;}
+
+  /* ---- 主内容区 ---- */
+  main{
+    position:relative;z-index:5;height:calc(100% - 120px);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:0 20px 40px;
+  }
+
+  /* 字卡片 */
+  .char-card{
+    background:#ffffff;
+    border:6px solid #fff;
+    outline:4px dashed var(--pink-light);
+    border-radius:40px;
+    box-shadow:var(--card-shadow);
+    width:min(420px,72vw);
+    height:min(320px,40vh);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:10px;
+    transition:transform .2s ease;
+    position:relative;
+  }
+  .char-card .badge{
+    position:absolute;top:-16px;right:20px;
+    background:var(--yellow);color:#a06a00;
+    font-size:15px;font-weight:800;
+    padding:4px 16px;border-radius:999px;
+    box-shadow:0 4px 10px rgba(255,200,80,.6);
+    transform:rotate(4deg);
+  }
+  #charDisplay{
+    font-size:150px;font-weight:900;line-height:1;
+    color:var(--text);
+  }
+  #progressText{font-size:17px;color:#b792c9;font-weight:700;letter-spacing:1px;}
+
+  /* 判定按钮 */
+  .judge-row{
+    display:flex;gap:26px;margin-top:26px;
+  }
+  .judge-btn{
+    font-size:26px;font-weight:900;letter-spacing:6px;
+    padding:14px 40px;border:none;border-radius:999px;cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease;
+    font-family:inherit;
+  }
+  .judge-btn:active{transform:scale(.93);}
+  .judge-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+  .btn-know{background:linear-gradient(135deg,#7de0ae,#4cc988);color:#fff;box-shadow:0 8px 18px rgba(76,201,136,.45);}
+  .btn-notknow{background:linear-gradient(135deg,#ff9a9e,#ff6b81);color:#fff;box-shadow:0 8px 18px rgba(255,107,129,.45);}
+  .judge-btn:hover:not(:disabled){transform:translateY(-3px) scale(1.04);}
+
+  /* 反馈气泡 */
+  #feedback{
+    margin-top:18px;font-size:20px;font-weight:800;letter-spacing:1px;
+    min-height:30px;opacity:0;transition:opacity .3s;
+  }
+  #feedback.show{opacity:1;animation:bounce .5s ease;}
+  @keyframes bounce{0%{transform:scale(.6);}60%{transform:scale(1.15);}100%{transform:scale(1);}}
+  #feedback.ok{color:var(--mint);}
+  #feedback.no{color:#ff6b81;}
+  #feedback.done{color:var(--purple);font-size:24px;}
+
+  /* 欢迎/完成 界面 */
+  .welcome-box,.done-box{
+    background:#ffffff;border-radius:40px;box-shadow:var(--card-shadow);
+    outline:4px dashed var(--purple-light);
+    padding:40px 46px;text-align:center;max-width:520px;
+    animation:pop .4s ease;
+  }
+  @keyframes pop{0%{transform:scale(.7);opacity:0;}100%{transform:scale(1);opacity:1;}}
+  .welcome-box h2{font-size:34px;margin-bottom:10px;}
+  .welcome-box p{font-size:19px;line-height:1.8;color:#8a6f9a;}
+  .welcome-box .big-emoji{font-size:60px;}
+  .done-box h2{font-size:36px;color:var(--pink);margin-bottom:14px;}
+  .done-box .stats{font-size:22px;line-height:2;font-weight:700;}
+  .done-box .stats b.ok{color:var(--mint);}
+  .done-box .stats b.no{color:#ff6b81;}
+
+  /* ---- 底部工具栏 ---- */
+  .toolbar{
+    position:fixed;bottom:0;left:0;right:0;z-index:10;
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;
+    padding:16px 20px 22px;
+    background:linear-gradient(0deg,rgba(255,255,255,.95),rgba(255,255,255,.55));
+    backdrop-filter:blur(6px);
+    border-top:3px dashed var(--pink-light);
+  }
+  .tool-btn{
+    font-family:inherit;
+    font-size:22px;font-weight:900;letter-spacing:2px;
+    padding:16px 10px;border:none;border-radius:999px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:transform .12s ease, box-shadow .12s ease, filter .12s;
+  }
+  .tool-btn:hover{transform:translateY(-3px);}
+  .tool-btn:active{transform:scale(.95);}
+  .tool-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+  .btn-import{background:var(--blue-light);color:#2d7fd4;box-shadow:0 6px 16px rgba(107,182,255,.4);}
+  .btn-start{background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;box-shadow:0 8px 20px rgba(255,143,191,.5);}
+  .btn-next{background:var(--orange-light);color:#d97a26;box-shadow:0 6px 16px rgba(255,178,107,.45);}
+
+  /* ---- 错题本面板 ---- */
+  .wrong-fab{
+    position:fixed;top:14px;right:14px;z-index:12;
+    font-family:inherit;font-size:16px;font-weight:800;
+    background:linear-gradient(135deg,#ff9a9e,#ff6b81);color:#fff;
+    border:none;border-radius:999px;padding:10px 18px;cursor:pointer;
+    box-shadow:0 6px 16px rgba(255,107,129,.5);
+    display:flex;align-items:center;gap:6px;
+    transition:transform .12s;
+  }
+  .wrong-fab:hover{transform:translateY(-2px) scale(1.04);}
+  #wrongCount{
+    background:#fff;color:#ff6b81;border-radius:999px;
+    font-size:14px;padding:1px 9px;font-weight:900;
+  }
+  .mask{
+    position:fixed;inset:0;background:rgba(120,80,140,.35);z-index:20;
+    display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);
+  }
+  .mask.show{display:flex;}
+  .wrong-panel{
+    background:#fff;border-radius:32px;box-shadow:0 20px 60px rgba(120,80,140,.4);
+    width:min(620px,90vw);max-height:82vh;display:flex;flex-direction:column;
+    overflow:hidden;animation:pop .3s ease;
+  }
+  .wrong-panel .wp-head{
+    background:linear-gradient(135deg,#ff9a9e,#ff6b81);
+    color:#fff;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;
+  }
+  .wp-head h2{font-size:24px;letter-spacing:2px;}
+  .wp-head .close,.input-panel .close{background:rgba(255,255,255,.25);border:none;color:#fff;font-size:20px;width:38px;height:38px;border-radius:50%;cursor:pointer;}
+  .wp-head .close:hover,.input-panel .close:hover{background:rgba(255,255,255,.45);}
+  .wrong-body{padding:20px 24px;overflow-y:auto;flex:1;}
+  #wrongList{display:flex;flex-wrap:wrap;gap:12px;}
+  #wrongList .w-item{
+    font-size:38px;font-weight:900;color:#d6405c;
+    background:var(--pink-light);border-radius:16px;
+    width:64px;height:64px;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 10px rgba(255,143,191,.3);
+  }
+  #wrongEmpty{font-size:18px;color:#c4a7b8;text-align:center;padding:30px 0;}
+  .wp-foot{padding:16px 24px;border-top:2px dashed var(--pink-light);display:flex;justify-content:center;gap:14px;}
+  .wp-btn{
+    font-family:inherit;font-size:18px;font-weight:800;letter-spacing:2px;
+    padding:12px 28px;border:none;border-radius:999px;cursor:pointer;
+    transition:transform .12s;
+  }
+  .wp-btn:active{transform:scale(.95);}
+  .btn-export{background:linear-gradient(135deg,#6bb6ff,#4c8fe8);color:#fff;box-shadow:0 6px 14px rgba(76,143,232,.45);}
+  .btn-clear{background:#fff0f2;color:#e05670;box-shadow:0 4px 10px rgba(224,86,112,.2);}
+
+  /* ---- 输入字库面板 ---- */
+  .input-panel{
+    background:#fff;border-radius:32px;box-shadow:0 20px 60px rgba(120,80,140,.4);
+    width:min(560px,92vw);max-height:86vh;display:flex;flex-direction:column;
+    overflow:hidden;animation:pop .3s ease;
+  }
+  .input-panel .ip-head{
+    background:linear-gradient(135deg,#6bb6ff,#a78bfa);
+    color:#fff;padding:16px 22px;display:flex;align-items:center;justify-content:space-between;
+  }
+  .input-panel .ip-head h2{font-size:24px;letter-spacing:2px;}
+  .ip-body{padding:22px 24px;display:flex;flex-direction:column;gap:14px;}
+  .ip-tip{font-size:16px;color:#8a6f9a;line-height:1.6;}
+  #charInput{
+    font-family:inherit;font-size:22px;line-height:1.9;color:var(--text);
+    border:3px dashed var(--blue-light);border-radius:16px;padding:12px 16px;
+    resize:vertical;outline:none;background:#fbfdff;
+  }
+  #charInput:focus{border-color:var(--blue);}
+  .btn-confirm{
+    font-family:inherit;font-size:20px;font-weight:800;letter-spacing:2px;
+    padding:14px;border:none;border-radius:999px;cursor:pointer;
+    background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;
+    box-shadow:0 6px 16px rgba(255,143,191,.5);
+    transition:transform .12s;
+  }
+  .btn-confirm:hover{transform:translateY(-2px);}
+  .btn-confirm:active{transform:scale(.97);}
+  .ip-divider{text-align:center;color:#c4a7b8;font-size:14px;position:relative;}
+  .ip-divider::before,.ip-divider::after{content:'';position:absolute;top:50%;width:38%;height:2px;background:var(--pink-light);}
+  .ip-divider::before{left:0;}
+  .ip-divider::after{right:0;}
+  .ip-file-btn{
+    font-family:inherit;font-size:16px;font-weight:700;letter-spacing:1px;
+    padding:12px;border:2px dashed var(--blue-light);border-radius:999px;cursor:pointer;
+    background:#fff;color:#4c8fe8;
+    transition:background .12s;
+  }
+  .ip-file-btn:hover{background:var(--blue-light);}
+
+  /* 完成时撒花 */
+  .confetti{position:fixed;top:-20px;z-index:15;pointer-events:none;font-size:26px;animation:fall linear forwards;}
+  @keyframes fall{to{transform:translateY(110vh) rotate(360deg);}}
+
+  /* 中央反馈特效层（点赞/哭脸） */
+  .center-fx{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    z-index:25;pointer-events:none;text-align:center;
+    display:none;
+  }
+  .center-fx.show{display:block;}
+  .center-fx .fx-emoji{display:block;font-size:150px;line-height:1;filter:drop-shadow(0 8px 16px rgba(255,143,191,.4));}
+  .center-fx .fx-text{
+    display:block;margin-top:10px;font-size:38px;font-weight:900;letter-spacing:4px;
+    text-shadow:0 3px 0 rgba(255,255,255,.95);
+  }
+  .center-fx.show .fx-emoji{animation:thumbPop 1s ease both;}
+  .center-fx.cry.show .fx-emoji{animation:cryShake 1s ease both;}
+  .center-fx.show .fx-text{animation:textFade 1s ease both;}
+  @keyframes thumbPop{
+    0%{transform:scale(0) rotate(-40deg);opacity:0;}
+    20%{transform:scale(1.4) rotate(12deg);opacity:1;}
+    35%{transform:scale(1) rotate(-6deg);}
+    50%{transform:scale(1.15) rotate(4deg);}
+    70%{transform:scale(1);}
+    100%{transform:scale(1.05);opacity:0;}
+  }
+  @keyframes cryShake{
+    0%{transform:scale(0) translateY(-30px);opacity:0;}
+    25%{transform:scale(1.3) translateY(0);opacity:1;}
+    40%{transform:scale(1) rotate(-10deg);}
+    50%{transform:scale(1.05) rotate(10deg);}
+    60%{transform:scale(1) rotate(-8deg);}
+    72%{transform:scale(1.05) rotate(8deg);}
+    100%{transform:scale(1);opacity:0;}
+  }
+  @keyframes textFade{
+    0%{opacity:0;transform:translateY(12px) scale(.8);}
+    20%{opacity:1;transform:translateY(0) scale(1.1);}
+    45%{transform:scale(1);}
+    100%{opacity:0;}
+  }
+
+  /* 顶部提示 toast */
+  #toast{
+    position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-20px);
+    background:rgba(91,74,99,.92);color:#fff;font-size:16px;font-weight:700;
+    padding:10px 26px;border-radius:999px;z-index:30;opacity:0;transition:all .3s;
+    pointer-events:none;white-space:nowrap;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media (max-width:520px){
+    header h1{font-size:32px;}
+    #charDisplay{font-size:110px;}
+    .char-card{width:86vw;height:44vw;}
+    .tool-btn{font-size:17px;padding:13px 6px;}
+    .judge-btn{font-size:20px;padding:12px 24px;}
+  }
+</style>
+</head>
+<body>
+
+  <!-- 漂浮装饰 -->
+  <div class="deco d1">🌈</div>
+  <div class="deco d2">⭐</div>
+  <div class="deco d3">🌸</div>
+  <div class="deco d4">🍬</div>
+  <div class="deco d5">☁️</div>
+  <div class="deco d6">🦄</div>
+
+  <!-- 顶部标题 -->
+  <header>
+    <h1>认字小达人 🍭</h1>
+    <div class="sub">每颗星星都在等你点亮 ✨</div>
+  </header>
+
+  <!-- 主内容区 -->
+  <main>
+    <div id="viewWelcome" class="welcome-box">
+      <div class="big-emoji">🧸</div>
+      <h2>宝贝准备好认字了吗？</h2>
+      <p>先点左下角「输入字库」填几个生字，<br>再点「开始」就能抽字啦！</p>
+    </div>
+
+    <div id="viewDone" class="done-box" style="display:none;">
+      <div class="big-emoji">🎉</div>
+      <h2>太棒了！全部认完啦！</h2>
+      <div class="stats" id="doneStats"></div>
+      <div style="margin-top:18px;">
+        <button class="wp-btn btn-export" onclick="openWrongPanel()">📋 查看错题本</button>
+      </div>
+    </div>
+
+    <div id="viewTest" style="display:none;display:flex;flex-direction:column;align-items:center;">
+      <div class="char-card">
+        <div class="badge" id="progressText">—</div>
+        <div id="charDisplay">?</div>
+      </div>
+      <div class="judge-row">
+        <button class="judge-btn btn-know" id="btnKnow" onclick="judge(true)">认识 😊</button>
+        <button class="judge-btn btn-notknow" id="btnNotKnow" onclick="judge(false)">不认识 😵</button>
+      </div>
+      <div id="feedback"></div>
+    </div>
+  </main>
+
+  <!-- 底部工具栏 -->
+  <div class="toolbar">
+    <button class="tool-btn btn-import" onclick="importTxt()">✏️ 输入字库</button>
+    <button class="tool-btn btn-start" onclick="startTest()">▶ 开始</button>
+    <button class="tool-btn btn-next" id="btnNext" onclick="nextChar()">下一个 ➡️</button>
+  </div>
+
+  <!-- 错题本悬浮按钮 -->
+  <button class="wrong-fab" onclick="openWrongPanel()">📕 错题本 <span id="wrongCount">0</span></button>
+
+  <!-- 错题本弹窗 -->
+  <div class="mask" id="wrongMask" onclick="if(event.target===this)closeWrongPanel()">
+    <div class="wrong-panel">
+      <div class="wp-head">
+        <h2>📕 错题本</h2>
+        <button class="close" onclick="closeWrongPanel()">✕</button>
+      </div>
+      <div class="wrong-body">
+        <div id="wrongEmpty" style="display:none;">还没有错字哦，继续保持！🎈</div>
+        <div id="wrongList"></div>
+      </div>
+      <div class="wp-foot">
+        <button class="wp-btn btn-export" onclick="exportWrong()">⬇️ 导出错题本</button>
+        <button class="wp-btn btn-clear" onclick="clearWrong()">🧹 清空</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 输入字库面板 -->
+  <div class="mask" id="inputMask" onclick="if(event.target===this)closeInputPanel()">
+    <div class="input-panel">
+      <div class="ip-head">
+        <h2>📝 输入生字</h2>
+        <button class="close" onclick="closeInputPanel()">✕</button>
+      </div>
+      <div class="ip-body">
+        <p class="ip-tip">输入要考察的生字，用逗号（， 或 ,）分隔：</p>
+        <textarea id="charInput" rows="4" placeholder="例如：大，小，多，少，上，下、天、地"></textarea>
+        <button class="btn-confirm" onclick="confirmInput()">✅ 确认字库</button>
+        <div class="ip-divider">或</div>
+        <button class="ip-file-btn" onclick="openFileImport()">📄 从 txt 文件导入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- toast -->
+  <div id="toast"></div>
+
+  <!-- 中央反馈特效层 -->
+  <div class="center-fx" id="centerFx">
+    <span class="fx-emoji">👍</span>
+    <span class="fx-text">太棒了！</span>
+  </div>
+
+  <input type="file" id="fileInput" accept=".txt,text/plain" style="display:none;">
+
+<script>
+  // ===== 状态 =====
+  let allChars = [];      // 去重后的全部生字
+  let order = [];         // 打乱后的出字顺序
+  let currentIndex = 0;   // 当前出字下标
+  let wrongChars = [];    // 错题本
+  let running = false;    // 是否进行中
+  let judged = false;     // 当前字是否已判定
+  let total = 0, correct = 0, wrongCount = 0; // 本轮统计
+
+  const $ = id => document.getElementById(id);
+  const charDisplay = $('charDisplay');
+  const progressText = $('progressText');
+  const feedback = $('feedback');
+  const btnKnow = $('btnKnow');
+  const btnNotKnow = $('btnNotKnow');
+  const btnNext = $('btnNext');
+
+  // ===== 输入/导入字库 =====
+  // 点击左下角按钮：打开手输面板
+  function importTxt(){
+    $('inputMask').classList.add('show');
+    setTimeout(() => $('charInput').focus(), 120);
+  }
+  // 面板内次级入口：从 txt 文件导入
+  function openFileImport(){
+    $('fileInput').value = '';
+    $('fileInput').click();
+  }
+  function closeInputPanel(){
+    $('inputMask').classList.remove('show');
+  }
+  // 提取汉字：按逗号切分后逐字拆分、去重，只保留汉字
+  function extractChars(text){
+    const matched = text.match(/[\u4e00-\u9fa5\u3400-\u4dbf\uf900-\ufaff]/g) || [];
+    return [...new Set(matched)];
+  }
+  // 确认手输的字库
+  function confirmInput(){
+    const raw = $('charInput').value.trim();
+    if(!raw){
+      toast('还没有输入生字哦 ✏️');
+      $('charInput').focus();
+      return;
+    }
+    const chars = extractChars(raw);
+    if(chars.length === 0){
+      toast('没有识别到汉字，请检查输入');
+      return;
+    }
+    applyChars(chars);
+    closeInputPanel();
+    $('charInput').value = '';
+  }
+  // 应用字库并回到欢迎界面
+  function applyChars(chars){
+    allChars = chars;
+    running = false; judged = false;
+    resetStats();
+    showView('welcome');
+    const box = $('viewWelcome').querySelector('h2');
+    box.textContent = `已导入 ${allChars.length} 个生字！`;
+    $('viewWelcome').querySelector('p').innerHTML = '字库已准备好，点「开始」就能抽字啦！🎲';
+    toast(`导入成功，共 ${allChars.length} 个生字 🎉`);
+  }
+  $('fileInput').addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    if(!/\.txt$/i.test(file.name)){
+      toast('请选择 .txt 文件哦');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const chars = extractChars(ev.target.result);
+      if(chars.length === 0){
+        toast('字库里没有检测到汉字，请检查 txt 内容');
+        return;
+      }
+      applyChars(chars);
+      closeInputPanel();
+    };
+    reader.onerror = () => toast('读取文件失败');
+    reader.readAsText(file, 'utf-8');
+  });
+
+  // ===== 开始 =====
+  function startTest(){
+    if(allChars.length === 0){
+      toast('请先导入字库哦 📥');
+      return;
+    }
+    // Fisher-Yates 洗牌
+    order = [...allChars];
+    for(let i = order.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    currentIndex = 0;
+    running = true;
+    judged = false;
+    resetStats();
+    showView('test');
+    displayCurrent();
+  }
+
+  // ===== 显示当前字 =====
+  function displayCurrent(){
+    if(currentIndex >= order.length){
+      finish();
+      return;
+    }
+    const ch = order[currentIndex];
+    charDisplay.textContent = ch;
+    progressText.textContent = `第 ${currentIndex + 1} / ${order.length} 个`;
+    judged = false;
+    setJudgedUI(false);
+    feedback.className = '';
+    feedback.textContent = '';
+    feedback.style.opacity = 0;
+    // 小弹跳动画
+    charDisplay.style.animation = 'none';
+    void charDisplay.offsetWidth;
+    charDisplay.style.animation = 'bounce .4s ease';
+  }
+
+  // ===== 判定 =====
+  function judge(isKnow){
+    if(!running) return;
+    if(judged) return;   // 每个字只判定一次
+    judged = true;
+    const ch = order[currentIndex];
+    total++;
+    if(isKnow){
+      correct++;
+      // 特效：中央点赞动画 + 语音"太棒了"
+      showCenterFx('👍', '太棒了！', false);
+      speak('太棒了');
+    }else{
+      wrongCount++;
+      if(!wrongChars.includes(ch)) wrongChars.push(ch);
+      // 特效：中央哭脸表情 + "当"音效
+      showCenterFx('😭', '没关系～', true);
+      playDang();
+    }
+    updateWrongBadge();
+    setJudgedUI(true);
+    // 判定后自动进入下一题；中央反馈动画继续播放，不阻塞流程
+    setTimeout(() => {
+      if(!running) return;
+      currentIndex++;
+      displayCurrent();
+    }, 350);
+  }
+
+  function setJudgedUI(judgedNow){
+    btnKnow.disabled = judgedNow;
+    btnNotKnow.disabled = judgedNow;
+    btnKnow.style.opacity = judgedNow ? .4 : 1;
+    btnNotKnow.style.opacity = judgedNow ? .4 : 1;
+    btnNext.classList.toggle('pulse', judgedNow);
+  }
+
+  // ===== 下一个 =====
+  function nextChar(){
+    if(!running){
+      if(allChars.length === 0) toast('请先导入字库并点击「开始」');
+      else toast('点击「开始」开始出字哦 ▶');
+      return;
+    }
+    currentIndex++;
+    displayCurrent();
+  }
+
+  // ===== 完成 =====
+  function finish(){
+    running = false;
+    showView('done');
+    $('doneStats').innerHTML =
+      `📚 共认了 <b>${total}</b> 个字<br>` +
+      `✅ 认识的：<b class="ok">${correct}</b> 个<br>` +
+      `❌ 不认识的：<b class="no">${wrongCount}</b> 个`;
+    // 全对（答错数为 0）：播放语音"小学霸，你已经无敌了"
+    if(total > 0 && wrongCount === 0){
+      speak('小学霸，你已经无敌了');
+    }
+    // 撒花
+    const emojis = ['🎉','🎊','⭐','🌸','🌈','🍬','💖'];
+    for(let i = 0; i < 24; i++){
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+      c.style.left = Math.random()*100 + 'vw';
+      c.style.fontSize = (18 + Math.random()*22) + 'px';
+      c.style.animationDuration = (2.5 + Math.random()*2.5) + 's';
+      c.style.animationDelay = (Math.random()*1.2) + 's';
+      document.body.appendChild(c);
+      setTimeout(()=>c.remove(), 5500);
+    }
+  }
+
+  // ===== 视图切换 =====
+  function showView(name){
+    $('viewWelcome').style.display = name==='welcome' ? '' : 'none';
+    $('viewDone').style.display = name==='done' ? '' : 'none';
+    $('viewTest').style.display = name==='test' ? 'flex' : 'none';
+  }
+
+  function resetStats(){ total = 0; correct = 0; wrongCount = 0; }
+
+  // ===== 错题本 =====
+  function updateWrongBadge(){
+    $('wrongCount').textContent = wrongChars.length;
+  }
+  function refreshWrongPanel(){
+    const list = $('wrongList');
+    const empty = $('wrongEmpty');
+    list.innerHTML = '';
+    if(wrongChars.length === 0){
+      empty.style.display = '';
+      return;
+    }
+    empty.style.display = 'none';
+    wrongChars.forEach(ch => {
+      const d = document.createElement('div');
+      d.className = 'w-item';
+      d.textContent = ch;
+      list.appendChild(d);
+    });
+  }
+  function openWrongPanel(){
+    refreshWrongPanel();
+    $('wrongMask').classList.add('show');
+  }
+  function closeWrongPanel(){
+    $('wrongMask').classList.remove('show');
+  }
+  function clearWrong(){
+    if(wrongChars.length === 0){ toast('错题本已经是空的啦'); return; }
+    wrongChars = [];
+    updateWrongBadge();
+    refreshWrongPanel();
+    toast('错题本已清空 🧹');
+  }
+  function exportWrong(){
+    if(wrongChars.length === 0){
+      toast('错题本还是空的，先导出不了哦');
+      return;
+    }
+    const content = wrongChars.join('\n');
+    const blob = new Blob(['\ufeff' + content], {type:'text/plain;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '错题本.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    toast('错题本已导出 ⬇️');
+  }
+
+  // ===== 中央反馈特效 =====
+  function showCenterFx(emoji, text, isCry){
+    const fx = $('centerFx');
+    fx.className = 'center-fx show' + (isCry ? ' cry' : '');
+    fx.querySelector('.fx-emoji').textContent = emoji;
+    const t = fx.querySelector('.fx-text');
+    t.textContent = text;
+    t.style.color = isCry ? '#ff6b81' : 'var(--mint)';
+    clearTimeout(fx._t);
+    fx._t = setTimeout(() => fx.classList.remove('show'), 1000); // 约1秒后自动消失
+  }
+
+  // ===== 中文语音播报（Web Speech API，优先女童声） =====
+  let cachedVoices = [];
+  function loadVoices(){ if('speechSynthesis' in window) cachedVoices = speechSynthesis.getVoices(); }
+  if('speechSynthesis' in window){
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function speak(text){
+    if(!('speechSynthesis' in window)) return;
+    try{
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'zh-CN';   // 中文
+      u.rate = 0.95;      // 稍慢，适合儿童
+      u.pitch = 1.6;      // 高音调，更像女童声
+      const zh = cachedVoices.filter(v => /zh|Chinese|中文/i.test(v.lang + ' ' + v.name));
+      if(zh.length){
+        const girl = zh.find(v => /female|girl|Xiaoxiao|Huihui|Meijia|Yating|女/i.test(v.name))
+                 || zh.find(v => /zh-CN/i.test(v.lang))
+                 || zh[0];
+        u.voice = girl;
+      }
+      window.speechSynthesis.speak(u);
+    }catch(e){ /* 语音失败时静默，不影响体验 */ }
+  }
+
+  // ===== "当"音效（Web Audio 合成清脆钟声，无外部音频） =====
+  function playDang(){
+    try{
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return;
+      const ctx = new Ctx();
+      const t = ctx.currentTime;
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.0001, t);
+      master.gain.exponentialRampToValueAtTime(0.6, t + 0.02);
+      master.gain.exponentialRampToValueAtTime(0.0001, t + 1.0);
+      master.connect(ctx.destination);
+      // 基频 + 多个泛音叠加，形成短促的"当"声
+      const partials = [523.25, 784.0, 1046.5, 1568.0, 2093.0];
+      partials.forEach((f, i) => {
+        const o = ctx.createOscillator();
+        o.type = 'sine';
+        o.frequency.value = f;
+        const g = ctx.createGain();
+        g.gain.value = i === 0 ? 1.0 : 0.5 / (i + 1);
+        o.connect(g);
+        g.connect(master);
+        o.start(t);
+        o.stop(t + 1.0);
+      });
+      setTimeout(() => { try{ ctx.close(); }catch(e){} }, 1200);
+    }catch(e){ /* 音频失败时静默 */ }
+  }
+
+  // ===== toast =====
+  let toastTimer = null;
+  function toast(msg){
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+
+  // 键盘支持：← 下一个
+  document.addEventListener('keydown', e => {
+    if(e.key === 'ArrowRight' || e.key === 'Enter') nextChar();
+    if(e.key === 'Escape') closeWrongPanel();
+  });
+</script>
+</body>
+</html>
