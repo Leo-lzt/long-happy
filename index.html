@@ -125,6 +125,10 @@
   .welcome-box h2{font-size:34px;margin-bottom:10px;}
   .welcome-box p{font-size:19px;line-height:1.8;color:#8a6f9a;}
   .welcome-box .big-emoji{font-size:60px;}
+  /* 欢迎页：去除小熊后压缩高度约为原一半（仅作用于欢迎页，不影响完成页） */
+  .welcome-box{padding:24px 44px;}
+  .welcome-box h2{font-size:25px;margin-bottom:8px;}
+  .welcome-box p{font-size:15px;line-height:1.7;}
   .done-box h2{font-size:36px;color:var(--pink);margin-bottom:14px;}
   .done-box .stats{font-size:22px;line-height:2;font-weight:700;}
   .done-box .stats b.ok{color:var(--mint);}
@@ -535,7 +539,6 @@
   <!-- 主内容区 -->
   <main>
     <div id="viewWelcome" class="welcome-box">
-      <div class="big-emoji">🧸</div>
       <h2>宝贝准备好认字了吗？</h2>
       <p>先点左下角「输入字库」填几个生字，<br>再点「开始」就能抽字啦！</p>
     </div>
