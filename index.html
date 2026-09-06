@@ -301,7 +301,7 @@
     position:fixed;top:52%;transform:translateY(-50%);z-index:6;
     width:150px;pointer-events:none;
   }
-  .char-char.elsa{left:12px;top:auto;bottom:20vh;transform:none;width:auto;}
+  .char-char.elsa{left:112px;top:auto;bottom:20vh;transform:none;width:auto;}
   /* 艾莎素材图：常态轻微浮动 + 左右轻摆 */
   .char-char.elsa .elsa-img{
     display:block;height:60vh;max-height:540px;min-height:260px;width:auto;
@@ -325,12 +325,12 @@
     0%,100%{opacity:.3;transform:scale(.7);}
     50%{opacity:1;transform:scale(1.25);}
   }
-  /* 安娜蹲坐哭泣 PNG：常态弱化浮动，答错时放大摇晃 */
+  /* 安娜蹲坐哭泣 PNG：常态完整展示（原图不透明），答错时放大摇晃 */
   .char-char.anna{right:10px;width:auto;}
   .char-char.anna .anna-gif{
     display:block;height:60vh;max-height:540px;min-height:260px;width:auto;
     filter:drop-shadow(0 10px 20px rgba(120,80,140,.28));
-    opacity:.45;transition:opacity .3s ease;
+    opacity:1;transition:opacity .3s ease;
     animation:annaIdle 3.2s ease-in-out infinite;
   }
   @keyframes annaIdle{
@@ -540,7 +540,7 @@
   <main>
     <div id="viewWelcome" class="welcome-box">
       <h2>宝贝准备好认字了吗？</h2>
-      <p>先点左下角「输入字库」填几个生字，<br>再点「开始」就能抽字啦！</p>
+      <p>字库已就绪（13 个生字），<br>点「开始」就能抽字啦！也可以点左下角「增加字库」换一批。</p>
     </div>
 
     <div id="viewDone" class="done-box" style="display:none;">
@@ -567,7 +567,7 @@
 
   <!-- 底部工具栏 -->
   <div class="toolbar">
-    <button class="tool-btn btn-import" onclick="importTxt()">✏️ 输入字库</button>
+    <button class="tool-btn btn-import" onclick="importTxt()">✏️ 增加字库</button>
     <button class="tool-btn btn-start" onclick="startTest()">▶ 开始</button>
     <button class="tool-btn btn-next" id="btnNext" onclick="nextChar()">下一个 ➡️</button>
   </div>
@@ -622,8 +622,11 @@
   <input type="file" id="fileInput" accept=".txt,text/plain" style="display:none;">
 
 <script>
+  // ===== 默认字库 =====
+  const DEFAULT_WORDS = ['河','许','准','稼','旅','脚','粗','离','庄','挺','管','奔','滴'];
+
   // ===== 状态 =====
-  let allChars = [];      // 去重后的全部生字
+  let allChars = [...DEFAULT_WORDS];      // 去重后的全部生字（默认预置字库，打开即用）
   let order = [];         // 打乱后的出字顺序
   let currentIndex = 0;   // 当前出字下标
   let wrongChars = [];    // 错题本
